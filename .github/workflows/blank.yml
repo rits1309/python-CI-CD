@@ -1,0 +1,39 @@
+name: CI/CD to ECR
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Set up AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      # Log in to ECR
+      - name: Log in to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # Build the Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t python-ci-cd:latest .
+          docker tag python-ci-cd:latest 908810579717.dkr.ecr.ap-south-1.amazonaws.com/python-CI-CD:latest
+
+      # Push the Docker image to ECR
+      - name: Push to Amazon ECR
+        run: |
+          docker push 908810579717.dkr.ecr.ap-south-1.amazonaws.com/python-ci-cd:latest
